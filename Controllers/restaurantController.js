@@ -76,10 +76,10 @@ export const createRestaurant = async (req, res) => {
     return res.status(201).json({
       message: "Restaurant created successfully.",
 
-      restaurant,
+      data: restaurant,
     });
   } catch (error) {
-    console.error("Create restaurant error:", error);
+    //console.error("Create restaurant error:", error);
 
     return res.status(500).json({
       message: "Failed to create restaurant.",
@@ -136,10 +136,10 @@ export const updateRestaurant = async (req, res) => {
 
     await restaurant.save();
 
-    return res.json({
+    return res.status(201).json({
       message: "Restaurant updated successfully.",
 
-      restaurant,
+      data: restaurant,
     });
   } catch (error) {
     console.error("Update restaurant error:", error);
@@ -276,7 +276,7 @@ export const getAllRestaurants = async (req, res) => {
       .sort(sortOption)
       .limit(100);
 
-    return res.json({
+    return res.status(201).json({
       count: restaurants.length,
       restaurants,
     });
@@ -285,6 +285,33 @@ export const getAllRestaurants = async (req, res) => {
 
     return res.status(500).json({
       message: "Failed to fetch restaurants.",
+    });
+  }
+};
+
+//Get Restaurant by Id
+
+export const getRestaurant = async (req, res) => {
+  try {
+    const restaurant = await Restaurant.findOne({
+      _id: req.params.id,
+      isActive: true,
+    });
+
+    if (!restaurant) {
+      return res.status(404).json({
+        message: "Restaurant not found.",
+      });
+    }
+
+    return res.status(201).json({
+      data: restaurant,
+    });
+  } catch (error) {
+    console.error("Get restaurant error:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch restaurant.",
     });
   }
 };
