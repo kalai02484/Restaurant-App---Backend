@@ -1,6 +1,5 @@
 import Restaurant from "../Models/restaurantModel.js";
 
-
 //create a Restaurant
 export const createRestaurant = async (req, res) => {
   try {
@@ -84,6 +83,69 @@ export const createRestaurant = async (req, res) => {
 
     return res.status(500).json({
       message: "Failed to create restaurant.",
+    });
+  }
+};
+
+//Update a Restaurant
+export const updateRestaurant = async (req, res) => {
+  try {
+    const restaurant = await Restaurant.findById(req.params.id);
+
+    if (!restaurant) {
+      return res.status(404).json({
+        message: "Restaurant not found.",
+      });
+    }
+
+    // Restaurant owners can only
+    // update their own restaurants.
+    if (
+      req.user.role === "restaurant_owner" &&
+      restaurant.ownerId.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        message: "You can only update your own restaurant.",
+      });
+    }
+
+    const allowedFields = [
+      "name",
+      "description",
+      "cuisines",
+      "priceRange",
+      "address",
+      "location",
+      "phone",
+      "email",
+      "images",
+      "amenities",
+      "dietaryOptions",
+      "ambiance",
+      "openingHours",
+      "menu",
+      "capacity",
+      "isActive",
+    ];
+
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        restaurant[field] = req.body[field];
+      }
+    }
+
+    await restaurant.save();
+
+    return res.json({
+      message: "Restaurant updated successfully.",
+
+      restaurant,
+    });
+  } catch (error) {
+    console.error("Update restaurant error:", error);
+
+    return res.status(500).json({
+      message: "Failed to update restaurant.",
     });
   }
 };
