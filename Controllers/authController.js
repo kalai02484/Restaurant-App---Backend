@@ -42,8 +42,7 @@ export const registerUser = async (req, res) => {
     const hashPassword = await bcrypt.hash(password, 10);
 
     // Allow only specific role
-    const safeRole =
-      role === "restaurant_owner" ? "restaurant_owner" : "user";
+    const safeRole = role === "restaurant_owner" ? "restaurant_owner" : "user";
 
     // Create user
     const newUser = new User({
@@ -71,6 +70,85 @@ export const registerUser = async (req, res) => {
 
     return res.status(500).json({
       message: "Internal server error",
+    });
+  }
+};
+
+//Login the user || signin user
+export const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Email and password are required.",
+      });
+    }
+
+    // Normalize email
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Find user
+    const userDetail = await User.findOne({
+      email: normalizedEmail,
+    });
+
+    // Don't reveal whether email exists
+    if (!userDetail) {
+      return res.status(401).json({
+        message: "Invalid email or password.",
+      });
+    }
+
+    // Compare password
+    const passwordMatch = await bcrypt.compare(password, userDetail.password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({
+        message: "Invalid email or password.",
+      });
+    }
+
+    // Check JWT secret
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is missing from environment variables.");
+
+      return res.status(500).json({
+        message: "Server configuration error.",
+      });
+    }
+
+    // Create JWT
+    const token = jwt.sign(
+      {
+        _id: userDetail._id,
+        role: userDetail.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      },
+    );
+
+    userDetail.token = token;
+    await userDetail.save();
+
+    res.status(200).json({
+      message: "User Logged In Successfully",
+      token,
+      user: {
+        _id: userDetail._id,
+        name: userDetail.name,
+        email: userDetail.email,
+        role: userDetail.role,
+      },
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+
+    return res.status(500).json({
+      message: "Internal server error.",
     });
   }
 };
