@@ -11,9 +11,9 @@ export const adminMiddleware = async (req, res, next) => {
   }
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("decoded", decoded);
+    //console.log("decoded", decoded);
     req.user = decoded;
-    console.log("req.user", req.user);
+    //console.log("req.user", req.user);
     const user = await User.findById(req.user._id);
     if (user.role === "admin") {
       next();
