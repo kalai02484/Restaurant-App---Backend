@@ -315,3 +315,39 @@ export const getRestaurant = async (req, res) => {
     });
   }
 };
+
+export const deleteRestaurant = async (req, res) => {
+  try {
+    const restaurant = await Restaurant.findById(req.params.id);
+
+    if (!restaurant) {
+      return res.status(404).json({
+        message: "Restaurant not found.",
+      });
+    }
+
+    if (
+      req.user.role === "restaurant_owner" &&
+      restaurant.ownerId.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        message: "You can only delete your own restaurant.",
+      });
+    }
+
+    // Soft delete
+    restaurant.isActive = false;
+
+    await restaurant.save();
+
+    return res.json({
+      message: "Restaurant removed successfully.",
+    });
+  } catch (error) {
+    console.error("Delete restaurant error:", error);
+
+    return res.status(500).json({
+      message: "Failed to remove restaurant.",
+    });
+  }
+};

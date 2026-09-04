@@ -25,7 +25,7 @@ app.get("/", (req, res)=>{
 //Custom Routes
 
 app.use("/api/auth", userRoute);
-app.use("/api/restaurant", restaurantRoute);
+app.use("/api/restaurants", restaurantRoute);
 
 //Port
 const port = process.env.PORT || 5000;
