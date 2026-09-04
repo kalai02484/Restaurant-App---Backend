@@ -24,13 +24,34 @@ export const authMiddleware = async (req, res, next) => {
   }
 };
 
-/*
-export const adminMiddleware = async (req, res, next) => {
-  if (req.user.role != "Admin") {
+export const restaurantOwner = async (req, res, next) => {
+  if (req.user.role != "restaurant_owner") {
     return res
       .status(404)
-      .json({ message: "Access denied only admin can view" });
+      .json({ message: "Access denied. Restaurant access Required" });
   }
   next();
 };
-*/
+
+export const admin = async (req, res, next) => {
+  if (req.user.role != "Admin") {
+    return res
+      .status(404)
+      .json({ message: "Access denied. Admin access Required" });
+  }
+  next();
+};
+
+
+export const ownerOrAdmin = (req, res, next) => {
+  if (
+    req.user?.role !== "restaurant_owner" &&
+    req.user?.role !== "admin"
+  ) {
+    return res.status(403).json({
+      message: "Restaurant Owner or admin access required."
+    });
+  }
+
+  next();
+};

@@ -1,4 +1,4 @@
-import Restaurant from "../models/Restaurant.js";
+import Restaurant from "../Models/restaurantModel.js";
 
 
 //create a Restaurant

@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./Database/dbConfig.js";
 import userRoute from "./Routers/authRoute.js";
+import restaurantRoute from "./Routers/restaurantRoute.js";
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.get("/", (req, res)=>{
 //Custom Routes
 
 app.use("/api/auth", userRoute);
+app.use("/api/restaurant", restaurantRoute);
 
 //Port
 const port = process.env.PORT || 5000;

@@ -4,7 +4,7 @@ import {
   loginUser,
   getCurrentUser,
 } from "../Controllers/authController.js";
-import { authMiddleware } from "../Middlewares/authMiddleware.js";
+import { authMiddleware } from "../Middlewares/middleware.js";
 
 const router = express.Router();
 
