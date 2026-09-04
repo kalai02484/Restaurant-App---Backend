@@ -17,7 +17,7 @@ connectDB();
 
 //default Route
 app.get("/", (req, res)=>{
-    res.status(200).send("Welcome to backend");
+    res.status(200).send("Welcome to Restaurant Reservation backend");
 })
 
 //Custom Routes
