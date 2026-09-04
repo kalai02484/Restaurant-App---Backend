@@ -149,3 +149,142 @@ export const updateRestaurant = async (req, res) => {
     });
   }
 };
+
+//Get all Restaurants
+export const getAllRestaurants = async (req, res) => {
+  try {
+    const {
+      q,
+      cuisine,
+      city,
+      minPrice,
+      maxPrice,
+      dietary,
+      ambiance,
+      amenity,
+      sort,
+    } = req.query;
+
+    const filter = {
+      isActive: true,
+    };
+
+    // -----------------------------
+    // Text search
+    // -----------------------------
+
+    if (q) {
+      filter.$text = {
+        $search: q,
+      };
+    }
+
+    // -----------------------------
+    // Cuisine
+    // -----------------------------
+
+    if (cuisine) {
+      filter.cuisines = {
+        $in: cuisine.split(",").map((item) => item.trim()),
+      };
+    }
+
+    // -----------------------------
+    // City
+    // -----------------------------
+
+    if (city) {
+      filter["location.city"] = {
+        $regex: city.trim(),
+        $options: "i",
+      };
+    }
+
+    // -----------------------------
+    // Price
+    // -----------------------------
+
+    if (minPrice || maxPrice) {
+      filter.priceRange = {};
+
+      if (minPrice) {
+        filter.priceRange.$gte = Number(minPrice);
+      }
+
+      if (maxPrice) {
+        filter.priceRange.$lte = Number(maxPrice);
+      }
+    }
+
+    // -----------------------------
+    // Dietary
+    // -----------------------------
+
+    if (dietary) {
+      filter.dietaryOptions = {
+        $in: dietary.split(",").map((item) => item.trim()),
+      };
+    }
+
+    // -----------------------------
+    // Ambiance
+    // -----------------------------
+
+    if (ambiance) {
+      filter.ambiance = {
+        $in: ambiance.split(",").map((item) => item.trim()),
+      };
+    }
+
+    // -----------------------------
+    // Amenities
+    // -----------------------------
+
+    if (amenity) {
+      filter.amenities = {
+        $in: amenity.split(",").map((item) => item.trim()),
+      };
+    }
+
+    // -----------------------------
+    // Sorting
+    // -----------------------------
+
+    let sortOption = {
+      rating: -1,
+    };
+
+    if (sort === "rating_asc") {
+      sortOption = {
+        rating: 1,
+      };
+    }
+
+    if (sort === "rating_desc") {
+      sortOption = {
+        rating: -1,
+      };
+    }
+
+    if (sort === "newest") {
+      sortOption = {
+        createdAt: -1,
+      };
+    }
+
+    const restaurants = await Restaurant.find(filter)
+      .sort(sortOption)
+      .limit(100);
+
+    return res.json({
+      count: restaurants.length,
+      restaurants,
+    });
+  } catch (error) {
+    console.error("Restaurant search error:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch restaurants.",
+    });
+  }
+};
