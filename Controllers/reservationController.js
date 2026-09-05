@@ -394,3 +394,49 @@ export const updateReservation = async (req, res) => {
     });
   }
 };
+
+//cancel Reservation
+export const cancelReservation = async (req, res) => {
+  try {
+    const reservation = await Reservation.findById(req.params.id);
+
+    if (!reservation) {
+      return res.status(404).json({
+        message: "Reservation not found.",
+      });
+    }
+
+    if (reservation.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        message: "You can only cancel your own reservation.",
+      });
+    }
+
+    if (reservation.status === "cancelled") {
+      return res.status(400).json({
+        message: "Reservation is already cancelled.",
+      });
+    }
+
+    if (reservation.status === "completed") {
+      return res.status(400).json({
+        message: "Completed reservations cannot be cancelled.",
+      });
+    }
+
+    reservation.status = "cancelled";
+
+    await reservation.save();
+
+    return res.status(200).json({
+      message: "Reservation cancelled successfully.",
+      reservation,
+    });
+  } catch (error) {
+    console.error("Cancel reservation error:", error);
+
+    return res.status(500).json({
+      message: "Failed to cancel reservation.",
+    });
+  }
+};
