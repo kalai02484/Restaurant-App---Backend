@@ -204,3 +204,28 @@ export const createReservation = async (req, res) => {
     });
   }
 };
+
+//Get My Reservations
+export const getMyReservations = async (req, res) => {
+  try {
+    const reservations = await Reservation.find({
+      userId: req.user._id,
+    })
+      .populate("restaurantId", "name address location phone images")
+      .sort({
+        date: 1,
+        time: 1,
+      });
+
+    return res.status(200).json({
+      count: reservations.length,
+      reservations,
+    });
+  } catch (error) {
+    console.error("Get my reservations error:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch your reservations.", error: error.message
+    });
+  }
+};
