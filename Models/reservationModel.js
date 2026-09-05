@@ -2,50 +2,72 @@ import mongoose from "mongoose";
 
 const reservationSchema = new mongoose.Schema(
   {
-    // User who made the reservation
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
 
-    // Restaurant being booked
     restaurantId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Restaurant",
       required: true,
     },
 
-    // Reservation date
     date: {
       type: String,
       required: true,
+      match: /^\d{4}-\d{2}-\d{2}$/,
     },
 
-    // Reservation time
     time: {
       type: String,
       required: true,
+      match: /^([01]\d|2[0-3]):([0-5]\d)$/,
     },
 
-    // Number of guests
     partySize: {
       type: Number,
       required: true,
       min: 1,
+      max: 50,
     },
 
-    // Reservation status
     status: {
       type: String,
-      enum: ["confirmed", "cancelled", "completed", "no_show"],
+      enum: ["pending", "confirmed", "cancelled", "completed"],
       default: "confirmed",
+    },
+
+    paymentStatus: {
+      type: String,
+      enum: ["unpaid", "paid", "refunded"],
+      default: "unpaid",
+    },
+
+    specialRequests: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 1000,
     },
   },
   {
     timestamps: true,
   },
 );
+
+reservationSchema.index({
+  restaurantId: 1,
+  date: 1,
+  time: 1,
+  status: 1,
+});
+
+reservationSchema.index({
+  userId: 1,
+  date: 1,
+});
 
 const Reservation = mongoose.model("Reservation", reservationSchema);
 
