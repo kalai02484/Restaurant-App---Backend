@@ -225,7 +225,45 @@ export const getMyReservations = async (req, res) => {
     console.error("Get my reservations error:", error);
 
     return res.status(500).json({
-      message: "Failed to fetch your reservations.", error: error.message
+      message: "Failed to fetch your reservations.",
+      error: error.message,
+    });
+  }
+};
+
+//Get one Reservation
+
+export const getReservation = async (req, res) => {
+  try {
+    const reservation = await Reservation.findById(req.params.id)
+      .populate("restaurantId", "name address location phone images")
+      .populate("userId", "name email");
+
+    if (!reservation) {
+      return res.status(404).json({
+        message: "Reservation not found.",
+      });
+    }
+
+    const isOwner =
+      reservation.userId._id.toString() === req.user._id.toString();
+
+    const isAdmin = req.user.role === "admin";
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        message: "You can only access your own reservation.",
+      });
+    }
+
+    return res.status(200).json({
+      reservation,
+    });
+  } catch (error) {
+    console.error("Get reservation error:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch reservation.",
     });
   }
 };
