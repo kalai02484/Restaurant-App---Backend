@@ -34,7 +34,7 @@ export const restaurantOwner = async (req, res, next) => {
 };
 
 export const admin = async (req, res, next) => {
-  if (req.user.role != "Admin") {
+  if (req.user.role != "admin") {
     return res
       .status(404)
       .json({ message: "Access denied. Admin access Required" });

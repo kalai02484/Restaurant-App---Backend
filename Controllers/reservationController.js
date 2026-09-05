@@ -440,3 +440,27 @@ export const cancelReservation = async (req, res) => {
     });
   }
 };
+
+//Admin : Get all Reservatons
+export const getAllReservations = async (req, res) => {
+  try {
+    const reservations = await Reservation.find()
+      .populate("userId", "name email")
+      .populate("restaurantId", "name address location")
+      .sort({
+        date: 1,
+        time: 1,
+      });
+
+    return res.status(200).json({
+      count: reservations.length,
+      reservations,
+    });
+  } catch (error) {
+    console.error("Get all reservations error:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch reservations.",
+    });
+  }
+};
