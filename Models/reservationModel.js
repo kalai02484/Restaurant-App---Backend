@@ -35,14 +35,29 @@ const reservationSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["pending", "confirmed", "cancelled", "completed"],
+      enum: ["pending", "confirmed", "cancelled", "completed", "expired"],
       default: "confirmed",
     },
 
     paymentStatus: {
       type: String,
-      enum: ["unpaid", "paid", "refunded"],
+      enum: ["unpaid", "paid", "failed", "refunded"],
       default: "unpaid",
+    },
+
+    stripeSessionId: {
+      type: String,
+      default: "",
+    },
+
+    stripePaymentIntentId: {
+      type: String,
+      default: "",
+    },
+
+    paymentExpiresAt: {
+      type: Date,
+      default: null,
     },
 
     specialRequests: {
@@ -67,6 +82,10 @@ reservationSchema.index({
 reservationSchema.index({
   userId: 1,
   date: 1,
+});
+
+reservationSchema.index({
+  stripeSessionId: 1,
 });
 
 const Reservation = mongoose.model("Reservation", reservationSchema);
