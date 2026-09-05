@@ -267,3 +267,130 @@ export const getReservation = async (req, res) => {
     });
   }
 };
+
+//Update Reservation
+export const updateReservation = async (req, res) => {
+  try {
+    const reservation = await Reservation.findById(req.params.id);
+
+    if (!reservation) {
+      return res.status(404).json({
+        message: "Reservation not found.",
+      });
+    }
+
+    if (reservation.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        message: "You can only modify your own reservation.",
+      });
+    }
+
+    if (reservation.status === "cancelled") {
+      return res.status(400).json({
+        message: "Cancelled reservations cannot be modified.",
+      });
+    }
+
+    if (reservation.status === "completed") {
+      return res.status(400).json({
+        message: "Completed reservations cannot be modified.",
+      });
+    }
+
+    const { date, time, partySize, specialRequests } = req.body;
+
+    const newDate = date || reservation.date;
+
+    const newTime = time || reservation.time;
+
+    const newPartySize =
+      partySize !== undefined ? Number(partySize) : reservation.partySize;
+
+    if (!Number.isInteger(newPartySize) || newPartySize < 1) {
+      return res.status(400).json({
+        message: "partySize must be a positive whole number.",
+      });
+    }
+
+    if (!TIME_SLOTS.includes(newTime)) {
+      return res.status(400).json({
+        message: "Invalid reservation time.",
+      });
+    }
+
+    const restaurant = await Restaurant.findOne({
+      _id: reservation.restaurantId,
+      isActive: true,
+    });
+
+    if (!restaurant) {
+      return res.status(404).json({
+        message: "Restaurant is no longer available.",
+      });
+    }
+
+    if (newPartySize > restaurant.capacity) {
+      return res.status(400).json({
+        message: "Party size exceeds restaurant capacity.",
+      });
+    }
+
+    /*
+     * Exclude the current reservation
+     * from the availability calculation.
+     */
+
+    const existingReservations = await Reservation.find({
+      restaurantId: reservation.restaurantId,
+
+      date: newDate,
+
+      time: newTime,
+
+      status: {
+        $in: ["pending", "confirmed"],
+      },
+
+      _id: {
+        $ne: reservation._id,
+      },
+    }).select("partySize");
+
+    const reservedSeats = existingReservations.reduce(
+      (total, item) => total + item.partySize,
+      0,
+    );
+
+    const availableSeats = restaurant.capacity - reservedSeats;
+
+    if (availableSeats < newPartySize) {
+      return res.status(409).json({
+        message: "Not enough availability for the new reservation time.",
+        availableSeats,
+      });
+    }
+
+    reservation.date = newDate;
+
+    reservation.time = newTime;
+
+    reservation.partySize = newPartySize;
+
+    if (specialRequests !== undefined) {
+      reservation.specialRequests = specialRequests;
+    }
+
+    await reservation.save();
+
+    return res.status(201).json({
+      message: "Reservation updated successfully.",
+      reservation,
+    });
+  } catch (error) {
+    console.error("Update reservation error:", error);
+
+    return res.status(500).json({
+      message: "Failed to update reservation.",
+    });
+  }
+};
